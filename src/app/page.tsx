@@ -129,7 +129,7 @@ export default function Home() {
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Generate unique, high-quality wallpapers for your desktop and mobile
-            devices using cutting-edge AI. Powered by Flux.1-schnell.
+            devices using cutting-edge AI.
           </p>
         </div>
 
@@ -376,7 +376,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-gray-200 dark:border-gray-800 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center text-sm text-gray-500">
-          <p>Powered by Together AI &bull; Secure payments by Stripe</p>
+          <p>AI-powered wallpaper generation &bull; Secure payments by Stripe</p>
           <p className="mt-1">
             &copy; {new Date().getFullYear()} AI Wallpapers. All rights reserved.
           </p>

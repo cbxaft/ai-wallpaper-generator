@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateWallpaper } from "@/lib/together";
+import { generateImage, getProviderName } from "@/lib/image-generator";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,10 @@ export async function POST(request: NextRequest) {
     // Enhanced prompt for wallpaper quality
     const enhancedPrompt = `Professional wallpaper, ultra high quality, 4k, ${prompt}. High detail, vibrant colors, suitable for desktop wallpaper, no text, no watermark`;
 
-    const result = await generateWallpaper({
+    const providerName = getProviderName();
+    console.log(`Using provider: ${providerName}`);
+
+    const result = await generateImage({
       prompt: enhancedPrompt,
       width: width || 1024,
       height: height || 768,
@@ -26,7 +29,8 @@ export async function POST(request: NextRequest) {
     // Return base64 image data
     return NextResponse.json({
       success: true,
-      imageUrl: `data:image/png;base64,${result.base64}`,
+      imageUrl: `data:${result.contentType};base64,${result.base64}`,
+      provider: providerName,
     });
   } catch (error) {
     console.error("Generate error:", error);

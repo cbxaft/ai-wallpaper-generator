@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AI Wallpapers - Generate Stunning Wallpapers with AI",
   description:
-    "Create unique, high-quality wallpapers for desktop and mobile using cutting-edge AI. Powered by Flux.1-schnell.",
+    "Create unique, high-quality wallpapers for desktop and mobile using cutting-edge AI.",
   openGraph: {
     title: "AI Wallpapers",
     description: "Generate stunning AI wallpapers for your devices",
