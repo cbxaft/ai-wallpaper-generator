@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { Wand2, Sparkles, Download, RefreshCw, ImageIcon, Loader2 } from "lucide-react";
 
 type GenerationStep = "idle" | "generating" | "done";
@@ -313,17 +314,26 @@ export default function Home() {
               </button>
             </div>
 
-            <p className="text-sm text-gray-500 text-center">
-              Free download includes a watermark.{" "}
-              <a
-                href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=627891168@qq.com&item_name=HD+Wallpaper+Pack+-+15+Premium+AI+Wallpapers&amount=2.99&currency_code=USD&return=https://ai-wallpaper-generator-tawny.vercel.app/success&cancel_return=https://ai-wallpaper-generator-tawny.vercel.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:text-orange-400 underline font-medium"
-              >
-                Buy 15 HD Wallpapers for $2.99, no watermark
-              </a>
-            </p>
+            <div className="text-sm text-gray-500 text-center space-y-1">
+              <p>
+                Free download includes a watermark.{" "}
+                <a
+                  href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=627891168@qq.com&item_name=HD+Wallpaper+Pack+-+15+Premium+AI+Wallpapers&amount=2.99&currency_code=USD&return=https://ai-wallpaper-generator-tawny.vercel.app/success&cancel_return=https://ai-wallpaper-generator-tawny.vercel.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-400 underline font-medium"
+                >
+                  Buy 15 HD Wallpapers - $2.99
+                </a>
+                {" "}or{" "}
+                <Link
+                  href="/premium"
+                  className="text-purple-500 hover:text-purple-400 underline font-medium"
+                >
+                  Custom Generation - $4.99
+                </Link>
+              </p>
+            </div>
           </div>
         )}
 
@@ -412,25 +422,40 @@ export default function Home() {
                   </form>
                 </div>
 
-                {/* Monthly */}
+                {/* Custom Generation */}
                 <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="font-semibold text-lg">Monthly Unlimited</h3>
-                      <p className="text-sm text-gray-500">Best value</p>
+                      <h3 className="font-semibold text-lg">
+                        Custom Generation
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Create your own
+                      </p>
                     </div>
-                    <div className="text-2xl font-bold">$9.99/mo</div>
+                    <div className="text-2xl font-bold">$4.99</div>
                   </div>
                   <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-4">
-                    <li>Unlimited generations</li>
-                    <li>HD resolution (up to 4K)</li>
+                    <li>10 HD custom wallpapers</li>
                     <li>No watermark</li>
-                    <li>All styles & ratios</li>
-                    <li>Priority generation</li>
+                    <li>Your choice of style & content</li>
+                    <li>1920x1080 resolution</li>
                   </ul>
-                  <button className="w-full py-2 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors">
-                    Subscribe Monthly
-                  </button>
+                  <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+                    <input type="hidden" name="cmd" value="_xclick" />
+                    <input type="hidden" name="business" value="627891168@qq.com" />
+                    <input type="hidden" name="item_name" value="Premium Custom Generation - 10 HD Wallpapers" />
+                    <input type="hidden" name="amount" value="4.99" />
+                    <input type="hidden" name="currency_code" value="USD" />
+                    <input type="hidden" name="return" value="https://ai-wallpaper-generator-tawny.vercel.app/premium" />
+                    <input type="hidden" name="cancel_return" value="https://ai-wallpaper-generator-tawny.vercel.app" />
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-all cursor-pointer"
+                    >
+                      Buy Now - $4.99
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>
