@@ -190,6 +190,39 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Quick prompts */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                Try These Prompts
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "🏔️ Mountain Lake", prompt: "A serene mountain lake at sunset with cherry blossoms, vibrant colors, highly detailed" },
+                  { label: "🌲 Enchanted Forest", prompt: "A mystical forest path with glowing mushrooms and fireflies, magical atmosphere, ethereal lighting" },
+                  { label: "🌊 Ocean Wave", prompt: "Dramatic waves crashing against a rocky coastline, stormy sky, cinematic lighting, seascape" },
+                  { label: "🌃 Cyberpunk City", prompt: "Cyberpunk cityscape at night with neon signs and flying cars, rain-slicked streets, blade runner style" },
+                  { label: "🌌 Aurora Night", prompt: "Brilliant northern lights dancing over a snowy mountain range, starry sky, night landscape" },
+                  { label: "🌸 Sakura Garden", prompt: "Japanese garden in full bloom with cherry blossoms, koi pond, traditional bridge, peaceful atmosphere" },
+                  { label: "🚀 Space Nebula", prompt: "Vibrant space nebula with swirling colors of purple and blue, distant galaxies, cosmic background" },
+                  { label: "🏜️ Desert Dunes", prompt: "Golden sand dunes at sunset, warm colors, long shadows, minimalist desert landscape" },
+                  { label: "💎 Crystal Cave", prompt: "Underground crystal cave with glowing purple amethyst geodes, bioluminescent light, fantasy" },
+                  { label: "☯️ Zen Garden", prompt: "Minimalist zen garden with raked sand patterns, single bonsai tree, peaceful meditation space" },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => setPrompt(item.prompt)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                      prompt === item.prompt
+                        ? "bg-pink-600 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Aspect ratio */}
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
