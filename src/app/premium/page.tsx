@@ -3,7 +3,8 @@
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
-  Wand2, Sparkles, Download, RefreshCw, Loader2, CheckCircle2,
+  Wand2, Sparkles, Download, Loader2, CheckCircle2, Trash2,
+  ImageIcon,
 } from "lucide-react";
 
 type GenerationStep = "idle" | "generating" | "done";
@@ -11,6 +12,7 @@ type GenerationStep = "idle" | "generating" | "done";
 interface GeneratedImage {
   url: string;
   prompt: string;
+  id: number;
 }
 
 export default function PremiumPage() {
@@ -21,52 +23,38 @@ export default function PremiumPage() {
   const [generatedCount, setGeneratedCount] = useState(0);
   const maxGenerations = 10;
   const remaining = maxGenerations - generatedCount;
+  const imageIdRef = useRef(0);
 
-  const generateWallpapers = useCallback(async () => {
+  const generateWallpaper = useCallback(async () => {
     if (!prompt.trim()) return;
     if (remaining <= 0) return;
 
     setStep("generating");
     setError(null);
-    setImages([]);
-
-    const newImages: GeneratedImage[] = [];
-    const batchSize = Math.min(remaining, 5); // Generate up to 5 at a time
 
     try {
-      for (let i = 0; i < batchSize; i++) {
-        const styleVariation = [
-          "",
-          ", dramatic lighting",
-          ", vibrant colors",
-          ", cinematic",
-          ", highly detailed",
-        ][i % 5];
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `${prompt}, no watermark, ultra HD, 1920x1080`,
+          width: 1920,
+          height: 1080,
+        }),
+      });
 
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: `${prompt}${styleVariation}, no watermark, ultra HD`,
-            width: 1920,
-            height: 1080,
-          }),
-        });
+      const data = await res.json();
 
-        const data = await res.json();
-
-        if (!data.success) {
-          throw new Error(data.error || `Generation ${i + 1} failed`);
-        }
-
-        newImages.push({
-          url: data.imageUrl,
-          prompt: `${prompt}${styleVariation}`,
-        });
+      if (!data.success) {
+        throw new Error(data.error || "Generation failed");
       }
 
-      setImages(newImages);
-      setGeneratedCount((prev) => prev + newImages.length);
+      const newId = imageIdRef.current++;
+      setImages((prev) => [
+        ...prev,
+        { url: data.imageUrl, prompt, id: newId },
+      ]);
+      setGeneratedCount((prev) => prev + 1);
       setStep("done");
     } catch (err) {
       setError(
@@ -76,20 +64,34 @@ export default function PremiumPage() {
     }
   }, [prompt, remaining]);
 
-  const handleDownload = useCallback((imageUrl: string, index: number) => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = `premium-wallpaper-${Date.now()}-${index + 1}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, []);
+  const handleDownload = useCallback(
+    (imageUrl: string, index: number) => {
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = `premium-wallpaper-${Date.now()}-${index + 1}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    []
+  );
 
-  const handleDownloadAll = useCallback(() => {
+  const downloadAllImages = useCallback(() => {
     images.forEach((img, i) => {
-      setTimeout(() => handleDownload(img.url, i), i * 500);
+      setTimeout(() => {
+        const link = document.createElement("a");
+        link.href = img.url;
+        link.download = `premium-wallpaper-${i + 1}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, i * 500);
     });
-  }, [images, handleDownload]);
+  }, [images]);
+
+  const clearImages = useCallback(() => {
+    setImages([]);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -118,15 +120,16 @@ export default function PremiumPage() {
       <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
         {remaining > 0 ? (
           <>
-            {/* Generator */}
-            <div className="max-w-2xl mx-auto space-y-6">
+            {/* Generator area */}
+            <div className="max-w-3xl mx-auto space-y-6">
               <div className="text-center mb-4">
                 <h1 className="text-3xl font-bold mb-2">
-                  Generate Premium Wallpapers
+                  Generate Your Custom Wallpaper
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Describe your vision and we'll create HD wallpapers
-                  with no watermark
+                  You have <strong>{remaining} generations</strong> left.
+                  Each time you generate, the image is saved below.
+                  Change your prompt and generate again!
                 </p>
               </div>
 
@@ -135,19 +138,19 @@ export default function PremiumPage() {
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe your dream wallpaper in detail..."
-                  className="w-full h-32 p-4 rounded-xl border border-orange-300 dark:border-orange-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-base"
+                  placeholder="Describe your dream wallpaper..."
+                  className="w-full h-28 p-4 rounded-xl border border-orange-300 dark:border-orange-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-base"
                   onKeyDown={(e) => {
                     if (
                       e.key === "Enter" &&
                       (e.metaKey || e.ctrlKey)
                     ) {
-                      generateWallpapers();
+                      generateWallpaper();
                     }
                   }}
                 />
                 <button
-                  onClick={generateWallpapers}
+                  onClick={generateWallpaper}
                   disabled={
                     !prompt.trim() || step === "generating"
                   }
@@ -161,24 +164,24 @@ export default function PremiumPage() {
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4" />
-                      Generate {Math.min(remaining, 5)} Wallpapers
+                      Generate (1 credit)
                     </>
                   )}
                 </button>
               </div>
 
-              {/* Quick prompts */}
+              {/* Quick prompt ideas */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                  Quick Ideas
+                  Try these ideas or write your own
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    "A majestic dragon flying over a medieval castle at sunset, epic fantasy",
-                    "Neon-lit Tokyo street at midnight with cherry blossoms and rain",
+                    "A majestic dragon flying over a medieval castle at sunset",
+                    "Neon-lit Tokyo street at midnight with cherry blossoms",
                     "Underwater city with bioluminescent coral and ancient ruins",
-                    "Abstract swirling galaxy with neon colors and geometric patterns",
-                    "Cozy cabin in a snowy forest with warm fireplace light streaming out",
+                    "Cozy cabin in a snowy forest with warm fireplace light",
+                    "Abstract swirling galaxy with neon colors",
                   ].map((item) => (
                     <button
                       key={item}
@@ -189,7 +192,7 @@ export default function PremiumPage() {
                           : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                     >
-                      {item.slice(0, 40)}...
+                      {item.slice(0, 35)}...
                     </button>
                   ))}
                 </div>
@@ -203,26 +206,43 @@ export default function PremiumPage() {
               )}
             </div>
 
-            {/* Results */}
+            {/* Generated images gallery */}
             {images.length > 0 && (
               <div className="max-w-6xl mx-auto mt-12 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">
-                    Your Wallpapers
-                  </h2>
-                  <button
-                    onClick={handleDownloadAll}
-                    className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-orange-500/25 flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download All ({images.length})
-                  </button>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">
+                      Your Gallery ({images.length})
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      All your generated wallpapers are saved here.
+                      Download any time.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {images.length > 0 && (
+                      <button
+                        onClick={clearImages}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Clear
+                      </button>
+                    )}
+                    <button
+                      onClick={downloadAllImages}
+                      className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-orange-500/25 flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download All ({images.length})
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {images.map((img, i) => (
                     <div
-                      key={i}
+                      key={img.id}
                       className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 group"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -232,12 +252,16 @@ export default function PremiumPage() {
                         className="w-full aspect-video object-cover"
                       />
                       <div className="p-3 flex items-center justify-between">
-                        <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                          #{i + 1}
-                        </span>
+                        <div className="text-xs text-gray-500 truncate max-w-[180px]">
+                          #{i + 1} &bull;{" "}
+                          {img.prompt.slice(0, 30)}
+                          {img.prompt.length > 30 ? "..." : ""}
+                        </div>
                         <button
-                          onClick={() => handleDownload(img.url, i)}
-                          className="text-xs text-orange-500 hover:text-orange-400 font-medium flex items-center gap-1"
+                          onClick={() =>
+                            handleDownload(img.url, i)
+                          }
+                          className="text-xs text-orange-500 hover:text-orange-400 font-medium flex items-center gap-1 flex-shrink-0"
                         >
                           <Download className="w-3 h-3" />
                           Download
@@ -246,10 +270,17 @@ export default function PremiumPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
 
-                <p className="text-sm text-gray-500 text-center">
-                  Tip: Right-click and "Save as" to download
-                  individual wallpapers
+            {/* Empty state */}
+            {images.length === 0 && step !== "generating" && (
+              <div className="max-w-md mx-auto text-center py-16">
+                <ImageIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-500">
+                  Your generated wallpapers will appear here.
+                  <br />
+                  Write a prompt above and click Generate!
                 </p>
               </div>
             )}
@@ -259,11 +290,14 @@ export default function PremiumPage() {
           <div className="max-w-md mx-auto text-center py-20">
             <CheckCircle2 className="w-16 h-16 text-orange-500 mx-auto mb-6" />
             <h2 className="text-2xl font-bold mb-4">
-              You've used all 10 generations!
+              You've used all {maxGenerations} generations!
             </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Don't forget to download your wallpapers above before
+              they expire.
+            </p>
             <p className="text-gray-600 dark:text-gray-400 mb-8">
-              Purchase another pack to continue generating premium
-              wallpapers.
+              Purchase another pack to continue generating.
             </p>
             <form
               action="https://www.paypal.com/cgi-bin/webscr"

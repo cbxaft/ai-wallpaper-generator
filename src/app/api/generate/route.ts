@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateImage, getProviderName } from "@/lib/image-generator";
+import sharp from "sharp";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,10 +27,32 @@ export async function POST(request: NextRequest) {
       steps: 4,
     });
 
-    // Return base64 image data
+    // Add watermark overlay at the bottom of the image
+    const metadata = await sharp(result.imageBuffer).metadata();
+    const w = metadata.width || 1024;
+    const h = metadata.height || 768;
+
+    const watermarked = await sharp(result.imageBuffer)
+      .composite([
+        {
+          input: Buffer.from(
+            `<svg width="${w}" height="${h}">
+              <rect x="0" y="${h - 40}" width="${w}" height="40" fill="rgba(0,0,0,0.2)" />
+              <text x="${w / 2}" y="${h - 14}" font-size="18" font-family="sans-serif" fill="rgba(255,255,255,0.5)" text-anchor="middle">AI Wallpapers</text>
+            </svg>`
+          ),
+          top: 0,
+          left: 0,
+        },
+      ])
+      .png()
+      .toBuffer();
+
+    const base64 = watermarked.toString("base64");
+
     return NextResponse.json({
       success: true,
-      imageUrl: `data:${result.contentType};base64,${result.base64}`,
+      imageUrl: `data:image/png;base64,${base64}`,
       provider: providerName,
     });
   } catch (error) {
