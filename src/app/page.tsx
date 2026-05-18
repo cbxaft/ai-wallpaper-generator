@@ -1,10 +1,34 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Wand2, Sparkles, Download, RefreshCw, ImageIcon, Loader2 } from "lucide-react";
+import { Wand2, Sparkles, Download, RefreshCw, ImageIcon, Loader2, AlertTriangle } from "lucide-react";
 
 type GenerationStep = "idle" | "generating" | "done";
+
+const DAILY_LIMIT = 3;
+const STORAGE_KEY = "ai-wallpaper-free-count";
+
+function getDailyUsage(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return 0;
+    const { date, count } = JSON.parse(raw);
+    if (date !== new Date().toDateString()) return 0;
+    return count;
+  } catch {
+    return 0;
+  }
+}
+
+function incrementDailyUsage(): number {
+  const today = new Date().toDateString();
+  const current = getDailyUsage();
+  const newCount = current + 1;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, count: newCount }));
+  return newCount;
+}
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -13,9 +37,15 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [style, setStyle] = useState("realistic");
   const [aspectRatio, setAspectRatio] = useState("landscape");
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [showPricing, setShowPricing] = useState(false);
+  const [dailyUsed, setDailyUsed] = useState(0);
   const imageRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    setDailyUsed(getDailyUsage());
+  }, []);
+
+  const remainingFree = DAILY_LIMIT - dailyUsed;
 
   const aspectRatios = [
     { id: "landscape", label: "Desktop (16:9)", width: 1024, height: 576 },
@@ -36,12 +66,20 @@ export default function Home() {
 
   const generateWallpaper = useCallback(async () => {
     if (!prompt.trim()) return;
+    if (remainingFree <= 0) {
+      setShowPricing(true);
+      return;
+    }
 
     setStep("generating");
     setError(null);
     setImageUrl(null);
 
     try {
+      // Increment usage BEFORE calling API to prevent concurrent abuse
+      const newCount = incrementDailyUsage();
+      setDailyUsed(newCount);
+
       const stylePrompt =
         style === "realistic"
           ? prompt
@@ -132,6 +170,39 @@ export default function Home() {
             Generate unique, high-quality wallpapers for your desktop and mobile
             devices using cutting-edge AI.
           </p>
+        </div>
+
+        {/* Free daily limit banner */}
+        <div className="max-w-2xl mx-auto mb-6">
+          {remainingFree > 0 ? (
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-xl py-2.5 px-4 border border-gray-100 dark:border-gray-800">
+              <Sparkles className="w-4 h-4 text-purple-500" />
+              <span>
+                Free: <strong>{remainingFree}</strong>/{DAILY_LIMIT} generations
+                remaining today
+              </span>
+              <span className="text-gray-300 dark:text-gray-600 mx-1">|</span>
+              <button
+                onClick={() => setShowPricing(true)}
+                className="text-purple-500 hover:text-purple-400 underline font-medium"
+              >
+                Upgrade for HD, no watermark
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2 text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-xl py-2.5 px-4 border border-orange-200 dark:border-orange-800">
+              <AlertTriangle className="w-4 h-4" />
+              <span>
+                You've used all {DAILY_LIMIT} free generations today.{" "}
+                <button
+                  onClick={() => setShowPricing(true)}
+                  className="underline font-medium"
+                >
+                  Buy HD Wallpaper Pack - $2.99
+                </button>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Generator section */}
@@ -333,6 +404,11 @@ export default function Home() {
                   Custom Generation - $4.99
                 </Link>
               </p>
+              {remainingFree > 0 && (
+                <p className="text-xs text-gray-400">
+                  You have {remainingFree} free generation{remainingFree > 1 ? "s" : ""} left today
+                </p>
+              )}
             </div>
           </div>
         )}
