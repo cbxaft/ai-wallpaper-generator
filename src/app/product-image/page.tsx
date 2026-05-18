@@ -229,50 +229,52 @@ export default function ProductImagePage() {
         </div>
       </main>
 
-      {/* Payment Modal */}
-      {showPayModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-sm w-full p-8 relative">
-            <button
-              onClick={() => setShowPayModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-            <h2 className="text-xl font-bold mb-4 text-center">
-              支付 ¥{PRICE_CNY}
-            </h2>
-            <p className="text-sm text-gray-500 text-center mb-6">
-              扫码支付后点击"已支付"继续生成
-            </p>
+            {/* Payment Modal - 信任制 */}
+            {showPayModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-sm w-full p-8 relative">
+                  <button
+                    onClick={() => setShowPayModal(false)}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                  <h2 className="text-xl font-bold mb-4 text-center">
+                    支付 ¥{PRICE_CNY}
+                  </h2>
+                  <p className="text-sm text-gray-500 text-center mb-4">
+                    微信/支付宝扫码支付后，点击下方按钮生成
+                  </p>
 
-            {/* 收款码占位 - 需要你替换成自己的 */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-4 text-center">
-              <p className="text-sm text-gray-500 mb-2">微信支付</p>
-              <div className="w-48 h-48 mx-auto bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                <p className="text-xs text-gray-400">请替换为你的收款码</p>
+                  <p className="text-sm text-center mb-4 font-medium">
+                    请转 ¥{PRICE_CNY} 到下方收款码
+                  </p>
+
+                  <div className="text-center text-xs text-gray-400 mb-6">
+                    <p>付款后点击"已支付，开始生成"</p>
+                    <p>AI 会自动处理您的图片</p>
+                  </div>
+
+                  <button
+                    onClick={doGenerate}
+                    disabled={generating}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all disabled:bg-gray-400 flex items-center justify-center gap-2"
+                  >
+                    {generating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        生成中...
+                      </>
+                    ) : (
+                      "已支付，开始生成"
+                    )}
+                  </button>
+                  <p className="text-xs text-gray-400 text-center mt-3">
+                    信任制：请自觉付款 🙏
+                  </p>
+                </div>
               </div>
-            </div>
-
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6 text-center">
-              <p className="text-sm text-gray-500 mb-2">支付宝</p>
-              <div className="w-48 h-48 mx-auto bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                <p className="text-xs text-gray-400">请替换为你的收款码</p>
-              </div>
-            </div>
-
-            <button
-              onClick={doGenerate}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all"
-            >
-              已支付，开始生成
-            </button>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              付款后点击按钮，AI 自动生成
-            </p>
-          </div>
-        </div>
-      )}
+            )}
     </div>
   );
 }
