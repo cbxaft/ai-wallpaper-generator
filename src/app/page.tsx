@@ -375,30 +375,30 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Single */}
+                {/* Wallpaper Pack */}
                 <div className="border border-purple-500 dark:border-purple-400 rounded-xl p-6 relative">
                   <div className="absolute -top-3 left-4 px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full">
                     POPULAR
                   </div>
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="font-semibold text-lg">Single Download</h3>
+                      <h3 className="font-semibold text-lg">HD Wallpaper Pack</h3>
                       <p className="text-sm text-gray-500">
-                        HD, no watermark
+                        15 premium wallpapers
                       </p>
                     </div>
                     <div className="text-2xl font-bold">$2.99</div>
                   </div>
                   <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-4">
-                    <li>HD resolution (up to 4K)</li>
+                    <li>15 HD wallpapers (1920x1080)</li>
                     <li>No watermark</li>
-                    <li>All styles available</li>
-                    <li>One-time purchase</li>
+                    <li>Various styles & themes</li>
+                    <li>Instant ZIP download</li>
                   </ul>
                   <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
                     <input type="hidden" name="cmd" value="_xclick" />
                     <input type="hidden" name="business" value="627891168@qq.com" />
-                    <input type="hidden" name="item_name" value="AI Wallpaper - Single HD Download" />
+                    <input type="hidden" name="item_name" value="HD Wallpaper Pack - 15 Premium AI Wallpapers" />
                     <input type="hidden" name="amount" value="2.99" />
                     <input type="hidden" name="currency_code" value="USD" />
                     <input type="hidden" name="return" value="https://ai-wallpaper-generator-tawny.vercel.app/success" />
