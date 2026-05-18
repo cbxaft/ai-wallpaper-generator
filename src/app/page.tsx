@@ -7,28 +7,6 @@ import { Wand2, Sparkles, Download, RefreshCw, ImageIcon, Loader2, AlertTriangle
 type GenerationStep = "idle" | "generating" | "done";
 
 const DAILY_LIMIT = 3;
-const STORAGE_KEY = "ai-wallpaper-free-count";
-
-function getDailyUsage(): number {
-  if (typeof window === "undefined") return 0;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return 0;
-    const { date, count } = JSON.parse(raw);
-    if (date !== new Date().toDateString()) return 0;
-    return count;
-  } catch {
-    return 0;
-  }
-}
-
-function incrementDailyUsage(): number {
-  const today = new Date().toDateString();
-  const current = getDailyUsage();
-  const newCount = current + 1;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, count: newCount }));
-  return newCount;
-}
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -38,14 +16,20 @@ export default function Home() {
   const [style, setStyle] = useState("realistic");
   const [aspectRatio, setAspectRatio] = useState("landscape");
   const [showPricing, setShowPricing] = useState(false);
-  const [dailyUsed, setDailyUsed] = useState(0);
+  const [remainingFree, setRemainingFree] = useState(DAILY_LIMIT);
   const imageRef = useRef<HTMLImageElement>(null);
 
+  // Fetch remaining count from server on mount
   useEffect(() => {
-    setDailyUsed(getDailyUsage());
+    fetch("/api/daily-remaining")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.remaining === "number") {
+          setRemainingFree(data.remaining);
+        }
+      })
+      .catch(() => {});
   }, []);
-
-  const remainingFree = DAILY_LIMIT - dailyUsed;
 
   const aspectRatios = [
     { id: "landscape", label: "Desktop (16:9)", width: 1024, height: 576 },
@@ -71,38 +55,45 @@ export default function Home() {
       return;
     }
 
-    setStep("generating");
-    setError(null);
-    setImageUrl(null);
+      setStep("generating");
+      setError(null);
+      setImageUrl(null);
 
-    try {
-      // Increment usage BEFORE calling API to prevent concurrent abuse
-      const newCount = incrementDailyUsage();
-      setDailyUsed(newCount);
+      try {
+        const stylePrompt =
+          style === "realistic"
+            ? prompt
+            : `${prompt}, ${style} style`;
 
-      const stylePrompt =
-        style === "realistic"
-          ? prompt
-          : `${prompt}, ${style} style`;
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: stylePrompt,
+            width: selectedRatio.width,
+            height: selectedRatio.height,
+          }),
+        });
 
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: stylePrompt,
-          width: selectedRatio.width,
-          height: selectedRatio.height,
-        }),
-      });
+        const data = await res.json();
 
-      const data = await res.json();
+        if (!data.success) {
+          // Rate limited
+          if (data.limitReached) {
+            setRemainingFree(0);
+            setShowPricing(true);
+            return;
+          }
+          throw new Error(data.error || "Generation failed");
+        }
 
-      if (!data.success) {
-        throw new Error(data.error || "Generation failed");
-      }
+        // Update remaining count from server
+        if (typeof data.remaining === "number") {
+          setRemainingFree(data.remaining);
+        }
 
-      setImageUrl(data.imageUrl);
-      setStep("done");
+        setImageUrl(data.imageUrl);
+        setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStep("idle");

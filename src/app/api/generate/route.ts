@@ -1,6 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateImage, getProviderName } from "@/lib/image-generator";
 import sharp from "sharp";
+import fs from "fs";
+import path from "path";
+
+const DAILY_LIMIT = 3;
+const RATE_LIMIT_DIR = path.join(process.cwd(), ".rate-limit");
+
+function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp;
+  return "127.0.0.1";
+}
+
+function getDailyUsage(ip: string): number {
+  try {
+    fs.mkdirSync(RATE_LIMIT_DIR, { recursive: true });
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const filePath = path.join(RATE_LIMIT_DIR, today);
+    const data: Record<string, number> = fs.existsSync(filePath)
+      ? JSON.parse(fs.readFileSync(filePath, "utf-8"))
+      : {};
+    return data[ip] || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function incrementDailyUsage(ip: string): number {
+  fs.mkdirSync(RATE_LIMIT_DIR, { recursive: true });
+  const today = new Date().toISOString().slice(0, 10);
+  const filePath = path.join(RATE_LIMIT_DIR, today);
+  const data: Record<string, number> = fs.existsSync(filePath)
+    ? JSON.parse(fs.readFileSync(filePath, "utf-8"))
+    : {};
+  data[ip] = (data[ip] || 0) + 1;
+  fs.writeFileSync(filePath, JSON.stringify(data));
+  return data[ip];
+}
+
+function getRemaining(ip: string): number {
+  return Math.max(0, DAILY_LIMIT - getDailyUsage(ip));
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +56,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Prompt is required" },
         { status: 400 }
+      );
+    }
+
+    // Check rate limit
+    const ip = getClientIp(request);
+    const remaining = getRemaining(ip);
+
+    if (remaining <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Daily limit reached (${DAILY_LIMIT} free generations). Please upgrade for unlimited HD generation.`,
+          remaining: 0,
+          limitReached: true,
+        },
+        { status: 429 }
       );
     }
 
@@ -26,6 +87,10 @@ export async function POST(request: NextRequest) {
       height: height || 768,
       steps: 4,
     });
+
+    // Increment usage AFTER successful generation
+    const used = incrementDailyUsage(ip);
+    const newRemaining = Math.max(0, DAILY_LIMIT - used);
 
     // Add watermark overlay at the bottom of the image
     const metadata = await sharp(result.imageBuffer).metadata();
@@ -54,6 +119,7 @@ export async function POST(request: NextRequest) {
       success: true,
       imageUrl: `data:image/png;base64,${base64}`,
       provider: providerName,
+      remaining: newRemaining,
     });
   } catch (error) {
     console.error("Generate error:", error);
