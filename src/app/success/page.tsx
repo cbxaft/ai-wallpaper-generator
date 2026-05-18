@@ -23,7 +23,7 @@ export default function SuccessPage() {
           className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-xl font-semibold text-lg transition-all shadow-lg shadow-orange-500/25 mb-6"
         >
           <Download className="w-6 h-6" />
-          Download Wallpaper Pack (60MB)
+          Download Wallpaper Pack (6.5MB)
         </a>
 
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-left text-sm text-gray-500 dark:text-gray-400 space-y-2">
