@@ -342,9 +342,21 @@ export default function Home() {
                     <li>All styles available</li>
                     <li>One-time purchase</li>
                   </ul>
-                  <button className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-purple-500/25">
-                    Buy Now
-                  </button>
+                  <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+                    <input type="hidden" name="cmd" value="_xclick" />
+                    <input type="hidden" name="business" value="627891168@qq.com" />
+                    <input type="hidden" name="item_name" value="AI Wallpaper - Single HD Download" />
+                    <input type="hidden" name="amount" value="2.99" />
+                    <input type="hidden" name="currency_code" value="USD" />
+                    <input type="hidden" name="return" value="https://ai-wallpaper-generator-tawny.vercel.app/success" />
+                    <input type="hidden" name="cancel_return" value="https://ai-wallpaper-generator-tawny.vercel.app" />
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-purple-500/25 cursor-pointer"
+                    >
+                      Buy Now - $2.99
+                    </button>
+                  </form>
                 </div>
 
                 {/* Monthly */}
@@ -376,7 +388,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-gray-200 dark:border-gray-800 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center text-sm text-gray-500">
-          <p>AI-powered wallpaper generation &bull; Secure payments by Stripe</p>
+          <p>AI-powered wallpaper generation &bull; Secure payments by PayPal</p>
           <p className="mt-1">
             &copy; {new Date().getFullYear()} AI Wallpapers. All rights reserved.
           </p>

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Sparkles, Check, ArrowLeft } from "lucide-react";
+
+const PAYPAL_EMAIL = "627891168@qq.com";
+const BASE_URL = "https://ai-wallpaper-generator-tawny.vercel.app";
 
 interface PricingPlan {
   id: string;
@@ -13,6 +15,7 @@ interface PricingPlan {
   features: string[];
   popular?: boolean;
   cta: string;
+  paypalAmount?: string;
 }
 
 const plans: PricingPlan[] = [
@@ -42,6 +45,7 @@ const plans: PricingPlan[] = [
     ],
     popular: true,
     cta: "Buy Now - $2.99",
+    paypalAmount: "2.99",
   },
   {
     id: "monthly",
@@ -57,47 +61,11 @@ const plans: PricingPlan[] = [
       "Priority generation speed",
     ],
     cta: "Subscribe - $9.99/mo",
+    paypalAmount: "9.99",
   },
 ];
 
 export default function PricingPage() {
-  const [loading, setLoading] = useState<string | null>(null);
-
-  const handlePurchase = async (planId: string) => {
-    if (planId === "free") {
-      window.location.href = "/";
-      return;
-    }
-
-    setLoading(planId);
-
-    try {
-      const res = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          priceId:
-            planId === "single"
-              ? "price_single"
-              : "price_unlimited",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || "Failed to create checkout session");
-      }
-    } catch (err) {
-      alert(
-        err instanceof Error ? err.message : "Payment failed. Please try again."
-      );
-      setLoading(null);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-gray-200 dark:border-gray-800">
@@ -165,44 +133,42 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => handlePurchase(plan.id)}
-                disabled={loading === plan.id}
-                className={`w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                  plan.popular
-                    ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/25"
-                    : plan.price === 0
-                      ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
-                      : "bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-800 text-white"
-                }`}
-              >
-                {loading === plan.id ? (
-                  <>
-                    <svg
-                      className="animate-spin w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  plan.cta
-                )}
-              </button>
+              {plan.id === "free" ? (
+                <Link
+                  href="/"
+                  className="block w-full py-3 rounded-xl text-sm font-semibold text-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-all"
+                >
+                  Get Started
+                </Link>
+              ) : (
+                <form
+                  action="https://www.paypal.com/cgi-bin/webscr"
+                  method="post"
+                  target="_blank"
+                >
+                  <input type="hidden" name="cmd" value="_xclick" />
+                  <input type="hidden" name="business" value={PAYPAL_EMAIL} />
+                  <input
+                    type="hidden"
+                    name="item_name"
+                    value={`AI Wallpaper - ${plan.name}`}
+                  />
+                  <input type="hidden" name="amount" value={plan.paypalAmount} />
+                  <input type="hidden" name="currency_code" value="USD" />
+                  <input type="hidden" name="return" value={`${BASE_URL}/success`} />
+                  <input type="hidden" name="cancel_return" value={BASE_URL} />
+                  <button
+                    type="submit"
+                    className={`w-full py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                      plan.popular
+                        ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/25"
+                        : "bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-800 text-white"
+                    }`}
+                  >
+                    {plan.cta}
+                  </button>
+                </form>
+              )}
             </div>
           ))}
         </div>
