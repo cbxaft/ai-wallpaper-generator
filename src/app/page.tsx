@@ -278,7 +278,25 @@ export default function Home() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+                <input type="hidden" name="cmd" value="_xclick" />
+                <input type="hidden" name="business" value="627891168@qq.com" />
+                <input type="hidden" name="item_name" value="AI Wallpaper - Single HD Download" />
+                <input type="hidden" name="amount" value="2.99" />
+                <input type="hidden" name="currency_code" value="USD" />
+                <input type="hidden" name="return" value="https://ai-wallpaper-generator-tawny.vercel.app/success" />
+                <input type="hidden" name="cancel_return" value="https://ai-wallpaper-generator-tawny.vercel.app" />
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-xl font-medium transition-all shadow-lg shadow-orange-500/25 flex items-center gap-2 cursor-pointer"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
+                  </svg>
+                  Buy HD - $2.99
+                </button>
+              </form>
               <button
                 onClick={handleDownload}
                 className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-purple-500/25 flex items-center gap-2"
@@ -297,12 +315,14 @@ export default function Home() {
 
             <p className="text-sm text-gray-500 text-center">
               Free download includes a small watermark.{" "}
-              <button
-                onClick={() => setShowPricing(true)}
-                className="text-purple-500 hover:text-purple-400 underline"
+              <a
+                href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=627891168@qq.com&item_name=AI+Wallpaper+-+Single+HD+Download&amount=2.99&currency_code=USD&return=https://ai-wallpaper-generator-tawny.vercel.app/success&cancel_return=https://ai-wallpaper-generator-tawny.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:text-orange-400 underline font-medium"
               >
-                Upgrade for HD, no watermark
-              </button>
+                Buy HD for $2.99, no watermark
+              </a>
             </p>
           </div>
         )}
